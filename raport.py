@@ -169,7 +169,7 @@ def client_summary(mac, csv_file=None):
 
             writer.writerow(["CLIENT SUMMARY"])
             writer.writerow(["MAC", mac])
-            writer.writerow(["PACKETS", packet_count])
+            writer.writerow(["PACKETS", count])
             writer.writerow(["FIRST SEEN", first])
             writer.writerow(["LAST SEEN", last])
 
