@@ -4,14 +4,9 @@ import os
 
 
 DB="wifi_history.db"
-
-print("DATABASE PATH:")
-print(os.path.abspath(DB))
-
 def get_connection():
-
     conn=sqlite3.connect(DB)
-
+    conn.row_factory=sqlite3.Row
     return conn
 
 
