@@ -75,6 +75,45 @@ def dhcp(limit=20):
     for ip, mac, cnt in rows:
         print(f"{ip:16} {mac:20} {cnt}")
 
+def summary():
+    conn = sqlite3.connect(DB)
+    cur = conn.cursor()
+
+    print("DATABASE SUMMARY")
+
+    for table in ["events", "traffic", "dhcp", "clients", "access_points"]:
+        cur.execute(f"SELECT COUNT(*) FROM {table}")
+        print(f"{table:15} {cur.fetchone()[0]}")
+
+    conn.close()
+
+
+def client(mac):
+    rows = query("""
+    SELECT time, src_ip, dst_ip, protocol, sport, dport
+    FROM traffic
+    WHERE client_mac=?
+    ORDER BY time DESC
+    LIMIT 50
+    """, (mac,))
+
+    print(f"CLIENT {mac}")
+    for row in rows:
+        print(row)
+
+
+def timeline():
+    rows = query("""
+    SELECT substr(time,1,13) AS hour, COUNT(*)
+    FROM events
+    GROUP BY hour
+    ORDER BY hour
+    """)
+
+    print("TIMELINE")
+    for hour, count in rows:
+        print(f"{hour}: {count}")
+        
 def help():
     print("""
 Usage:
@@ -84,6 +123,9 @@ python raport.py src
 python raport.py dst
 python raport.py events
 python raport.py dhcp
+python raport.py summary
+python raport.py client MAC
+python raport.py timeline
 """)
 
 if __name__ == "__main__":
@@ -103,5 +145,12 @@ if __name__ == "__main__":
         events()
     elif cmd == "dhcp":
         dhcp()
-    else:
-        help()
+    elif cmd == "summary":
+        summary()
+    elif cmd == "client":
+        if len(sys.argv) < 3:
+            help()
+        else:
+            client(sys.argv[2])
+    elif cmd == "timeline":
+        timeline()
