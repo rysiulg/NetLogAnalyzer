@@ -127,7 +127,8 @@ def client_summary(mac, csv_file=None):
     SELECT COUNT(*) FROM traffic
     WHERE client_mac=?
     """, (mac,))
-    print("PACKETS:", cur.fetchone()[0])
+    count = cur.fetchone()[0]
+    print("PACKETS:", count)
 
     cur.execute("""
     SELECT MIN(time), MAX(time)
