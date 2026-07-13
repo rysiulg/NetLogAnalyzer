@@ -114,6 +114,56 @@ def timeline():
     for hour, count in rows:
         print(f"{hour}: {count}")
         
+def client_summary(mac):
+    conn = sqlite3.connect(DB)
+    cur = conn.cursor()
+
+    print("CLIENT SUMMARY")
+    print("MAC:", mac)
+
+    cur.execute("""
+    SELECT COUNT(*) FROM traffic
+    WHERE client_mac=?
+    """, (mac,))
+    print("PACKETS:", cur.fetchone()[0])
+
+    cur.execute("""
+    SELECT MIN(time), MAX(time)
+    FROM traffic
+    WHERE client_mac=?
+    """, (mac,))
+    first, last = cur.fetchone()
+    print("FIRST SEEN:", first)
+    print("LAST SEEN:", last)
+
+    print("\nTOP DESTINATIONS")
+    cur.execute("""
+    SELECT dst_ip, COUNT(*) cnt
+    FROM traffic
+    WHERE client_mac=?
+    GROUP BY dst_ip
+    ORDER BY cnt DESC
+    LIMIT 10
+    """, (mac,))
+
+    for ip, cnt in cur.fetchall():
+        print(f"{ip:20} {cnt}")
+
+    print("\nTOP PORTS")
+    cur.execute("""
+    SELECT dport, COUNT(*) cnt
+    FROM traffic
+    WHERE client_mac=?
+    GROUP BY dport
+    ORDER BY cnt DESC
+    LIMIT 10
+    """, (mac,))
+
+    for port, cnt in cur.fetchall():
+        print(f"{port:10} {cnt}")
+
+    conn.close()
+    
 def help():
     print("""
 Usage:
@@ -152,5 +202,10 @@ if __name__ == "__main__":
             help()
         else:
             client(sys.argv[2])
+    elif cmd == "client-summary":
+        if len(sys.argv) < 3:
+            help()
+        else:
+            client_summary(sys.argv[2])
     elif cmd == "timeline":
         timeline()
