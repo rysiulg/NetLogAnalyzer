@@ -149,7 +149,8 @@ def client_summary(mac, csv_file=None):
     LIMIT 10
     """, (mac,))
 
-    for ip, cnt in cur.fetchall():
+    destinations = cur.fetchall()
+    for ip, cnt in destinations:
         print(f"{ip:20} {cnt}")
 
     print("\nTOP PORTS")
@@ -161,9 +162,11 @@ def client_summary(mac, csv_file=None):
     ORDER BY cnt DESC
     LIMIT 10
     """, (mac,))
-
-    for port, cnt in cur.fetchall():
+    
+    ports = cur.fetchall()
+    for port, cnt in ports:
         print(f"{str(port):10} {cnt}")
+    
     if csv_file:
         with open(csv_file, "w", newline="", encoding="utf-8") as f:
             writer = csv.writer(f)
