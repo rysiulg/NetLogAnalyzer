@@ -92,6 +92,17 @@ def init_db():
 
 
     """)
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_traffic_time ON traffic(time)")
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_traffic_client ON traffic(client_mac)")
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_traffic_src ON traffic(src_ip)")
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_traffic_dst ON traffic(dst_ip)")
+    
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_events_time ON events(time)")
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_events_mac ON events(mac)")
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_events_type ON events(event)")
+    
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_dhcp_ip ON dhcp(ip)")
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_dhcp_mac ON dhcp(mac)")
     print("DATABASE INITIALIZED")
 
 
