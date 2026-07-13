@@ -2,6 +2,7 @@ import sqlite3
 import sys
 import csv
 from database import DB
+from protocol import protocol_name
 
 def query(sql, params=()):
     conn = sqlite3.connect(DB)
@@ -105,11 +106,11 @@ def client(mac):
 
 def timeline():
     rows = query("""
-SELECT substr(time,1,13) AS hour, COUNT(*)
+SELECT substr(time,1,13), COUNT(*)
 FROM events
 WHERE time GLOB '____-__-__ __:*'
-GROUP BY hour
-ORDER BY hour
+GROUP BY substr(time,1,13)
+ORDER BY substr(time,1,13)
     """)
 
     print("TIMELINE")
@@ -166,6 +167,20 @@ def client_summary(mac, csv_file=None):
     ports = cur.fetchall()
     for port, cnt in ports:
         print(f"{str(port):10} {cnt}")
+    
+    print("\nPROTOCOLS")
+    cur.execute("""
+SELECT proto, COUNT(*)
+FROM traffic
+JOIN client_ap ON traffic.client_id=client_ap.client_id
+JOIN clients ON clients.id=client_ap.client_id
+WHERE clients.mac=?
+GROUP BY proto
+ORDER BY COUNT(*) DESC
+""", (mac,))
+    
+    for proto, cnt in cur.fetchall():
+        print(f"{protocol_name(proto):10} {cnt}")
     
     if csv_file:
         with open(csv_file, "w", newline="", encoding="utf-8") as f:
