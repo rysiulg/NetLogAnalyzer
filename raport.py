@@ -1,5 +1,6 @@
 import sqlite3
 import sys
+import csv
 from database import DB
 
 def query(sql, params=()):
@@ -104,17 +105,18 @@ def client(mac):
 
 def timeline():
     rows = query("""
-    SELECT substr(time,1,13) AS hour, COUNT(*)
-    FROM events
-    GROUP BY hour
-    ORDER BY hour
+SELECT substr(time,1,13) AS hour, COUNT(*)
+FROM events
+WHERE time GLOB '____-__-__ __:*'
+GROUP BY hour
+ORDER BY hour
     """)
 
     print("TIMELINE")
     for hour, count in rows:
         print(f"{hour}: {count}")
         
-def client_summary(mac):
+def client_summary(mac, csv_file=None):
     conn = sqlite3.connect(DB)
     cur = conn.cursor()
 
@@ -161,7 +163,26 @@ def client_summary(mac):
 
     for port, cnt in cur.fetchall():
         print(f"{str(port):10} {cnt}")
+    if csv_file:
+        with open(csv_file, "w", newline="", encoding="utf-8") as f:
+            writer = csv.writer(f)
 
+            writer.writerow(["CLIENT SUMMARY"])
+            writer.writerow(["MAC", mac])
+            writer.writerow(["PACKETS", packet_count])
+            writer.writerow(["FIRST SEEN", first])
+            writer.writerow(["LAST SEEN", last])
+
+            writer.writerow([])
+            writer.writerow(["DESTINATION", "COUNT"])
+            for ip, cnt in destinations:
+                writer.writerow([ip, cnt])
+
+            writer.writerow([])
+            writer.writerow(["PORT", "COUNT"])
+            for port, cnt in ports:
+                writer.writerow([port if port else "-", cnt])
+                
     conn.close()
     
 def help():
@@ -206,6 +227,9 @@ if __name__ == "__main__":
         if len(sys.argv) < 3:
             help()
         else:
-            client_summary(sys.argv[2])
+            client_summary(
+                sys.argv[2],
+                sys.argv[4] if len(sys.argv) > 3 and sys.argv[3] == "--csv" else None
+            )
     elif cmd == "timeline":
         timeline()
