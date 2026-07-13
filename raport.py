@@ -107,8 +107,8 @@ def client(mac):
 def timeline():
     rows = query("""
 SELECT substr(time,1,13), COUNT(*)
-FROM events
-WHERE time GLOB '____-__-__ __:*'
+FROM traffic
+WHERE time != ''
 GROUP BY substr(time,1,13)
 ORDER BY substr(time,1,13)
     """)
@@ -170,7 +170,7 @@ def client_summary(mac, csv_file=None):
     
     print("\nPROTOCOLS")
     cur.execute("""
-SELECT proto, COUNT(*)
+SELECT protocol, COUNT(*)
 FROM traffic
 JOIN client_ap ON traffic.client_id=client_ap.client_id
 JOIN clients ON clients.id=client_ap.client_id
@@ -180,7 +180,7 @@ ORDER BY COUNT(*) DESC
 """, (mac,))
     
     for proto, cnt in cur.fetchall():
-        print(f"{protocol_name(proto):10} {cnt}")
+        print(f"{str(proto):10} {cnt}")
     
     if csv_file:
         with open(csv_file, "w", newline="", encoding="utf-8") as f:
