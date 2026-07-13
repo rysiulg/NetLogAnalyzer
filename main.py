@@ -184,7 +184,6 @@ for filename in files:
             traffic = parse_traffic(raw)
             for t in traffic:
                 save_client(t["client"], timestamp)
-                save_client_ap(t["client"], t["ap"], timestamp, "traffic")
                 save_traffic(t, timestamp)
                 save_event(timestamp, "syslog", t["client"], "traffic")
                 counter += 1
