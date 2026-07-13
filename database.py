@@ -16,7 +16,8 @@ def init_db():
     conn=get_connection()
 
     cur=conn.cursor()
-
+    conn.execute("PRAGMA journal_mode=WAL")
+    conn.execute("PRAGMA synchronous=NORMAL")
 
     cur.executescript("""
 
