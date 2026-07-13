@@ -178,7 +178,7 @@ ORDER BY COUNT(*) DESC
 """, (mac,))
 
     for proto, cnt in cur.fetchall():
-        print(f"{str(proto):10} {cnt}")
+        print(f"{protocol_name(proto):10} {cnt}")
     
     if csv_file:
         with open(csv_file, "w", newline="", encoding="utf-8") as f:
@@ -201,6 +201,13 @@ ORDER BY COUNT(*) DESC
                 writer.writerow([port if port else "-", cnt])
                 
     conn.close()
+    
+def protocol_name(proto):
+    return {
+        "6": "TCP",
+        "17": "UDP",
+        "1": "ICMP"
+    }.get(str(proto), str(proto))
     
 def help():
     print("""
