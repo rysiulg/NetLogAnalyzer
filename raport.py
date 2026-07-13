@@ -160,7 +160,7 @@ def client_summary(mac):
     """, (mac,))
 
     for port, cnt in cur.fetchall():
-        print(f"{port:10} {cnt}")
+        print(f"{str(port):10} {cnt}")
 
     conn.close()
     
