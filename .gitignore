@@ -5,4 +5,5 @@
 /sqlite3_analyzer.exe
 /sqlite3_rsync.exe
 /syslog
-/__pycache__
+/__pycache__wifi_history.db
+*.db
