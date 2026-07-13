@@ -7,3 +7,4 @@
 /syslog
 /__pycache__wifi_history.db
 *.db
+__pycache__/
