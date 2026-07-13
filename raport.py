@@ -172,13 +172,11 @@ def client_summary(mac, csv_file=None):
     cur.execute("""
 SELECT protocol, COUNT(*)
 FROM traffic
-JOIN client_ap ON traffic.client_id=client_ap.client_id
-JOIN clients ON clients.id=client_ap.client_id
-WHERE clients.mac=?
-GROUP BY proto
+WHERE client_mac=?
+GROUP BY protocol
 ORDER BY COUNT(*) DESC
 """, (mac,))
-    
+
     for proto, cnt in cur.fetchall():
         print(f"{str(proto):10} {cnt}")
     
