@@ -14,6 +14,7 @@ from utils import normalize_mac
 init_db()
 conn = sqlite3.connect(DB)
 cur = conn.cursor()
+counter = 0
 
 MAC_RE = re.compile(r'(?i)\b(?:[0-9a-f]{2}:){5}[0-9a-f]{2}\b')
 CSV_TIME_RE = re.compile(r'^[A-Z][a-z]{2}\s+\d{1,2}\s+\d{2}:\d{2}:\d{2}$')
@@ -60,11 +61,11 @@ def save_traffic(x, ts):
     VALUES(?,?,?,?,?,?,?,?)
     """, (ts, x["ap"], x["client"], x["src"], x["dst"], x["protocol"], x["sport"], x["dport"]))
 
-def save_event(ts, source, mac, event, raw):
+def save_event(ts, source, mac, event, raw=None):
     cur.execute("""
     INSERT INTO events (time,source,mac,event,raw)
     VALUES(?,?,?,?,?)
-    """, (ts, source, mac, event, raw))
+    """, (ts, source, mac, event, None))
 
 def parse_csv_time(text):
     if not text:
@@ -139,6 +140,10 @@ for filename in files:
                     if ap_mac:
                         save_ap({"id": ap_mac, "name": source, "model": rec["device"], "ip": rec["source_ip"]}, ts)
                 save_event(ts, source, mac, rec["facility"] or "syslog", raw)
+                counter += 1
+                if counter % 5000 == 0:
+                    conn.commit()
+                    print(counter)
                 continue
 
             timestamp = parse_time(raw)
@@ -161,19 +166,31 @@ for filename in files:
                 if current_ap:
                     save_client_ap(sta["mac"], current_ap, timestamp, sta["event"], sta["vap"])
                 save_event(timestamp, "syslog", sta["mac"], "sta", raw)
+                counter += 1
+                if counter % 5000 == 0:
+                    conn.commit()
+                    print(counter)
 
             dhcp = parse_dhcp(raw)
             if dhcp:
                 save_client(dhcp["mac"], timestamp)
                 save_dhcp(dhcp, timestamp)
                 save_event(timestamp, "syslog", dhcp["mac"], "dhcp", raw)
+                counter += 1
+                if counter % 5000 == 0:
+                    conn.commit()
+                    print(counter)
 
             traffic = parse_traffic(raw)
             for t in traffic:
                 save_client(t["client"], timestamp)
                 save_client_ap(t["client"], t["ap"], timestamp, "traffic")
                 save_traffic(t, timestamp)
-                save_event(timestamp, "syslog", t["client"], "traffic", raw)
+                save_event(timestamp, "syslog", t["client"], "traffic")
+                counter += 1
+                if counter % 5000 == 0:
+                    conn.commit()
+                    print(counter)
 
 conn.commit()
 conn.close()
