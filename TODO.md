@@ -1,0 +1,1 @@
+lista kolejnych etapów
