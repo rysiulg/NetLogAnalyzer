@@ -22,15 +22,23 @@ CSV_TIME_RE = re.compile(r'^[A-Z][a-z]{2}\s+\d{1,2}\s+\d{2}:\d{2}:\d{2}$')
 def save_ap(data, ts):
     if not data:
         return
+    data["id"] = normalize_mac(data["id"])
     cur.execute("""
     INSERT INTO access_points (mac,name,model,ip,first_seen,last_seen)
     VALUES(?,?,?,?,?,?)
     ON CONFLICT(mac) DO UPDATE SET
-    name=excluded.name,
-    model=excluded.model,
-    ip=excluded.ip,
+    name=COALESCE(NULLIF(excluded.name,''),access_points.name),
+    model=COALESCE(NULLIF(excluded.model,''),access_points.model),
+    ip=COALESCE(NULLIF(excluded.ip,''),access_points.ip),
     last_seen=excluded.last_seen
-    """, (data["id"], data["name"], data["model"], data["ip"], ts, ts))
+    """, (
+        data["id"],
+        data.get("name"),
+        data.get("model"),
+        data.get("ip"),
+        ts,
+        ts,
+    ))
 
 def save_client(mac, ts, hostname=None, name=None):
     mac = normalize_mac(mac)
@@ -116,9 +124,17 @@ for filename in files:
                 traffic = parse_traffic(msg)
                 if traffic:
                     for t in traffic:
+                        # Traffic contains the BSSID actually serving the client.
+                        # Keep it as an AP record even when the syslog record exposes
+                        # only an IP address and not a friendly AP name.
+                        save_ap({
+                            "id": t["ap"],
+                            "name": rec["hostname"] if rec["hostname"] != rec["source_ip"] else None,
+                            "model": rec["device"],
+                            "ip": rec["source_ip"],
+                        }, ts)
                         save_client(t["client"], ts, source)
                         save_traffic(t, ts)
-                        save_client_ap(t["client"], t["ap"], ts, "traffic")
                         save_event(ts, source, t["client"], "traffic", raw)
                     continue
 
@@ -131,7 +147,17 @@ for filename in files:
 
                 sta = parse_sta(msg)
                 if sta:
+                    ap_mac = first_mac(rec["device"] or "")
+                    if ap_mac:
+                        save_ap({
+                            "id": ap_mac,
+                            "name": rec["hostname"] if rec["hostname"] != rec["source_ip"] else None,
+                            "model": rec["device"],
+                            "ip": rec["source_ip"],
+                        }, ts)
                     save_client(sta["mac"], ts, source)
+                    if ap_mac:
+                        save_client_ap(sta["mac"], ap_mac, ts, sta["event"], sta["vap"])
                     save_event(ts, source, sta["mac"], "sta", raw)
                     continue
 

@@ -94,6 +94,7 @@ def init_db():
     """)
     conn.execute("CREATE INDEX IF NOT EXISTS idx_traffic_time ON traffic(time)")
     conn.execute("CREATE INDEX IF NOT EXISTS idx_traffic_client ON traffic(client_mac)")
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_traffic_client_time ON traffic(client_mac, time)")
     conn.execute("CREATE INDEX IF NOT EXISTS idx_traffic_src ON traffic(src_ip)")
     conn.execute("CREATE INDEX IF NOT EXISTS idx_traffic_dst ON traffic(dst_ip)")
     

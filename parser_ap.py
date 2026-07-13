@@ -22,7 +22,7 @@ def parse_ap_info(line):
     return {
         "ip":m.group("ip"),
         "name":m.group("name"),
-        "id":m.group("id"),
+        "id":normalize_mac(m.group("id")),
         "model":m.group("model")
     }
 
