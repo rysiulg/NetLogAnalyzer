@@ -8,3 +8,5 @@
 /__pycache__wifi_history.db
 *.db
 __pycache__/
+*.db-wal
+*.db-shm
